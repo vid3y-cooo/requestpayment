@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Confirmation</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+}
+
+.card {
+    width: 95%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+
+.card h2 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.qr {
+    margin: 15px 0;
+}
+
+.qr img {
+    width: 220px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,255,255,0.4);
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    margin-top: 15px;
+    resize: none;
+    outline: none;
+}
+
+input[type="file"] {
+    margin-top: 15px;
+    color: white;
+}
+
+.preview {
+    margin-top: 15px;
+}
+
+.preview img {
+    width: 100%;
+    border-radius: 12px;
+    display: none;
+}
+
+button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+button:disabled {
+    background: gray;
+    cursor: not-allowed;
+}
+
+.status {
+    margin-top: 15px;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Scan QR Untuk Payment</h2>
+
+    <div class="qr">
+        <!-- GANTI LINK QR -->
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=ISI_LINK_PAYMENT_KAMU">
+    </div>
+
+    <p>Sudah TF? Upload bukti di bawah ya!</p>
+
+    <form id="paymentForm">
+        <textarea id="pesan" rows="3" placeholder="Tulis pesan / request bahan..." required></textarea>
+        <input type="file" id="bukti" accept="image/*" required>
+
+        <div class="preview">
+            <img id="previewImg">
+        </div>
+
+        <button type="submit" id="btn">Kirim Bukti</button>
+    </form>
+
+    <div class="status" id="status"></div>
+</div>
+
+<script>
+const token = "ISI_BOT_TOKEN_KAMU";
+const chat_id = "ISI_CHAT_ID_KAMU";
+
+const fileInput = document.getElementById("bukti");
+const previewImg = document.getElementById("previewImg");
+const form = document.getElementById("paymentForm");
+const btn = document.getElementById("btn");
+const statusText = document.getElementById("status");
+
+fileInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if (file) {
+        previewImg.style.display = "block";
+        previewImg.src = URL.createObjectURL(file);
+    }
+});
+
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    btn.disabled = true;
+    btn.innerText = "Mengirim...";
+    statusText.innerText = "";
+
+    const pesan = document.getElementById("pesan").value;
+    const file = fileInput.files[0];
+
+    const formData = new FormData();
+    formData.append("chat_id", chat_id);
+    formData.append("photo", file);
+    formData.append("caption", `📥 BUKTI TF BARU\n\n📝 Pesan: ${pesan}`);
+
+    fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        statusText.innerText = "✅ Bukti berhasil dikirim!";
+        form.reset();
+        previewImg.style.display = "none";
+        btn.disabled = false;
+        btn.innerText = "Kirim Bukti";
+    })
+    .catch(err => {
+        statusText.innerText = "❌ Gagal mengirim!";
+        btn.disabled = false;
+        btn.innerText = "Kirim Bukti";
+    });
+});
+</script>
+
+</body>
+</html>
